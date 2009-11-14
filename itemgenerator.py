@@ -31,6 +31,7 @@ class DandDGUI(wx.Notebook):
     
     def OnLoad(self):
         """This is a test function, don't keep it"""
+        return
         it = item.Item("Bigby's Thing")
         it.slot = item.slots[2]
         it.level="3"
@@ -56,7 +57,7 @@ class DandDGUI(wx.Notebook):
         it.slot=panel.slot.GetStringSelection() or ""
         keywordstr = str(panel.keywords.GetValue()).strip()
         if keywordstr:
-            it.keywords = map(str.strip, keywordstr.split(","))
+            it.keywords = map(str.strip, map(str, keywordstr.split(",")))
         it.description=panel.description.GetValue()
         it.flavor=panel.flavor.GetValue()
         nfeatures = panel.nfeatures
@@ -68,7 +69,9 @@ class DandDGUI(wx.Notebook):
         if panel is self.wp:
             for atr in "proficiency dice weapontype group".split():
                 setattr(it, atr,getattr(panel,atr).GetStringSelection() or "")
-            
+            propstr = str(panel.properties.GetValue()).strip()
+            if propstr:
+                it.properties = map(str.strip, map(str, propstr.split(",")))
             if "Ranged" in it.weapontype:
                 it.range = panel.range.GetValue()
         
