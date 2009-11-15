@@ -117,7 +117,7 @@ table.weapontable{
 /*general stuff*/
 #features{
 	//background: #eeddcc;
-	font-size: small;
+	font-size: x-small;
 }
 #features ul{
 line-height: 1.5em;
@@ -129,7 +129,7 @@ margin: 0px;
 }
 #properties{
 	//background: #eeddcc;
-	font-size: small;
+	font-size: x-small;
 }
 #properties ul{
 line-height: 1.5em;
