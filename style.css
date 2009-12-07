@@ -41,7 +41,7 @@ ul{
 #cardheader {
 	background: #ffcc33;
 	padding: 2px;
-	height: 17%; 
+	height: 25%; 
 	border-bottom: solid 1px;
 }
 #card div.weapon{
@@ -61,8 +61,6 @@ ul{
 #description{
 /*	background: #ff5555;*/
 	height: 70%;
-/*	border-top: solid 1px;*/
-/*	border-left: solid 1px;*/
 
 }
 #slot{
@@ -75,16 +73,16 @@ ul{
 	vertical-align: text-top;
 	background: #ffffaa;
 	border: solid 1px;
-/*	z-index: -1;*/
 }
 
 /* Keyword section*/
 
 #keywords{
-	background: #ffffaa;
+/*	background: #ffffaa;*/
 	font-style: italic;
-	height: 8%;
-	border-bottom: solid 1px;
+	height: 16px;
+	margin-top: -17px;
+	border-top: solid 1px;
 
 }
 
@@ -125,21 +123,14 @@ table.weapontable{
 }
 #features ul{
 //background-color: #CCCCCC;
-/*margin: 0px;*/
 }
 #properties{
 	//background: #eeddcc;
 	font-size: x-small;
 }
 #properties ul{
-/*line-height: 1.5em;
-margin-left: 1em;
-padding-left: 1em;*/
-color: #00CC33;
-//background-color: #CCCCCC;
-/*padding-top: 6px;*/
-/*padding-bottom: 10px;*/
-/*margin: 0px;*/
+    color: #00CC33;
+//  background-color: #CCCCCC;
 }
 #properties li{
 	color: #12a;
