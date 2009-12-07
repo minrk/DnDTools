@@ -37,8 +37,8 @@ def HTMLCard(it):
     if isweapon: # insert Weapon Group
         ET.SubElement(header, "div", id="weapongroup", Class="littlebox").text=text(it.group)
     ET.SubElement(header, "div", id="description").text=text(it.description)
-    
-    ET.SubElement(card, "div", id="keywords").text="Keywords: "+", ".join(it.keywords)
+    if it.keywords:
+        ET.SubElement(card, "div", id="keywords").text="Keywords: "+", ".join(it.keywords)
     
     # card body
     body = ET.SubElement(card, "div", id="cardbody")
