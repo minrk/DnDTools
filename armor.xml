@@ -1,0 +1,86 @@
+<itemlist>
+<Armor>
+    <level>1</level>
+    <name>Chainmail</name>
+    <slot>Chain</slot>
+    <value>40</value>
+    <description />
+    <flavor />
+    <ACBonus>+6</ACBonus>
+    <enhancement>+0</enhancement>
+    <armorCheck>-1</armorCheck>
+    <speedCheck>-1</speedCheck>
+</Armor>
+<Armor>
+    <level>1</level>
+    <name>Leather</name>
+    <slot>Leather</slot>
+    <value>25</value>
+    <description />
+    <flavor />
+    <ACBonus>+2</ACBonus>
+    <enhancement>+0</enhancement>
+    <armorCheck>-</armorCheck>
+    <speedCheck>-</speedCheck>
+</Armor>
+<Armor>
+    <level>1</level>
+    <name>Hide</name>
+    <slot>Hide</slot>
+    <value>30</value>
+    <description />
+    <flavor />
+    <ACBonus>+3</ACBonus>
+    <enhancement>+0</enhancement>
+    <armorCheck>-1</armorCheck>
+    <speedCheck>-</speedCheck>
+</Armor>
+<Armor>
+    <level>1</level>
+    <name>Scale</name>
+    <slot>Scale</slot>
+    <value>45</value>
+    <description />
+    <flavor />
+    <ACBonus>+7</ACBonus>
+    <enhancement>+0</enhancement>
+    <armorCheck>-</armorCheck>
+    <speedCheck>-1</speedCheck>
+</Armor>
+<Armor>
+    <level>1</level>
+    <name>Plate</name>
+    <slot>Scale</slot>
+    <value>50</value>
+    <description />
+    <flavor />
+    <ACBonus>+8</ACBonus>
+    <enhancement>+0</enhancement>
+    <armorCheck>-2</armorCheck>
+    <speedCheck>-1</speedCheck>
+</Armor>
+<Armor>
+    <level>1</level>
+    <name>Light Shield</name>
+    <slot>LightShield</slot>
+    <value>5</value>
+    <description />
+    <flavor />
+    <ACBonus>+1</ACBonus>
+    <enhancement>+0</enhancement>
+    <armorCheck>-</armorCheck>
+    <speedCheck>-</speedCheck>
+</Armor>
+<Armor>
+    <level>1</level>
+    <name>Heavy Shield</name>
+    <slot>HeavyShield</slot>
+    <value>10</value>
+    <description />
+    <flavor />
+    <ACBonus>+2</ACBonus>
+    <enhancement>+0</enhancement>
+    <armorCheck>-2</armorCheck>
+    <speedCheck>-</speedCheck>
+</Armor>
+</itemlist>
