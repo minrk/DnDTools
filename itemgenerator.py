@@ -45,7 +45,7 @@ class DandDGUI(wx.Notebook):
     
     def addItem(self, panel):
         name = panel.name.GetValue()
-        print name
+        # print name
         if panel is self.ip:
             it = item.Item(name)
         elif panel is self.wp:
@@ -72,14 +72,14 @@ class DandDGUI(wx.Notebook):
             propstr = str(panel.properties.GetValue()).strip()
             if propstr:
                 it.properties = map(str.strip, map(str, propstr.split(",")))
-            if "Ranged" in it.weapontype:
-                it.range = panel.range.GetValue()
+            # if "Ranged" in it.weapontype:
+            it.range = (panel.range.GetValue() or "-")
         
         elif panel is self.ap:
             for atr in "ACBonus enhancement armorCheck speedCheck".split():
                 setattr(it, atr,getattr(panel,atr).GetStringSelection() or "")
         self.inv.addItem(it)
-        self.SetSelection(0)
+        # self.SetSelection(0)
     
     def activateItem(self, it):
         if isinstance(it, item.Weapon):
@@ -121,7 +121,11 @@ class ItemPanel(ScrolledPanel):
     
     def loadItem(self, it):
         for atr in "name value description flavor".split():
-            getattr(self, atr).SetValue(getattr(it, atr,""))
+            try:
+                getattr(self, atr).SetValue(getattr(it, atr) or "")
+            except:
+                print atr,getattr(it, atr,"")
+                
         
         for atr in "keywords".split():
             getattr(self, atr).SetValue(", ".join(getattr(it, atr, "")))
@@ -282,6 +286,7 @@ class WeaponPanel(ItemPanel):
         return sizer
     
     def OnType(self, evt):
+        return # don't hide
         if "Ranged" in self.weapontype.GetStringSelection():
             self.range.Show()
             self.rangeLabel.Show()
@@ -344,17 +349,23 @@ class InventoryRow(object):
         self.sizer.Add(self.delete,**bulk)
         self.field=wx.TextCtrl(panel, size=(500,LINES),style=wx.TE_READONLY)
         self.sizer.Add(self.field,**bulk)
+        self.checked = wx.CheckBox(panel)
+        # self.checked.SetValue(True)
+        self.sizer.Add(self.checked,**bulk)
+        # self.checklabel = wx.StaticText(panel, label="print")
+        # self.sizer.Add(self.checklabel,**bulk)
         self.hide()
     
     def hide(self):
-        self.field.Hide()
-        self.copy.Hide()
-        self.delete.Hide()
+        self.hidden = True
+        for obj in 'field copy delete checked'.split():
+            # print obj
+            getattr(self, obj).Hide()
     
     def show(self):
-        self.field.Show()
-        self.copy.Show()
-        self.delete.Show()
+        self.hidden = False
+        for obj in 'field copy delete checked'.split():
+            getattr(self, obj).Show()
     
     def OnCopy(self,evt):
         self.panel.parent.activateItem(self.panel.items[self.index])
@@ -411,15 +422,30 @@ class InventoryPanel(ScrolledPanel):
         self.SetSizer(boxSizer)
         self.sizer=boxSizer
     
+    def screenItems(self):
+        itemdict = {}
+        for it in self.items:
+            itemdict[repr(it)] = it
+        screened = []
+        for row in self.rows:
+            if (not row.hidden) and row.checked.IsChecked():
+                try:
+                    it = itemdict.get(str(row.field.GetValue()))
+                except:
+                    print "no such item %s"%row.field.GetValue()
+                screened.append(it)
+        return screened
+        
     def addItem(self, it):
         if it.isin(self.items):
-            return
+            return False
         assert not len(self.items) >= MAX_ITEMS, "reached max %i items!"%(MAX_ITEMS)
         n = len(self.items)
         self.rows[n].field.SetValue(repr(it))
         self.rows[n].show()
         self.items.append(it)
         self.twiddle()
+        return True
     
     def dropItem(self, index):
         n = len(self.items)
@@ -451,7 +477,7 @@ class InventoryPanel(ScrolledPanel):
             path=dlg.GetPath()
             self.activeFile=path
             self.activeDir=dirname(path)
-            item.writeItemList(self.items,path)
+            item.writeItemList(self.screenItems(),path)
         dlg.Destroy()
     
     def RenderHTML(self, evt):
@@ -460,7 +486,7 @@ class InventoryPanel(ScrolledPanel):
                             wildcard="*.HTML|*.html",style=wx.FD_SAVE)
         if dlg.ShowModal():
             path=dlg.GetPath()
-            item.writeHTMLItemTables(self.items,path,embedStyle=True)
+            item.writeHTMLItemTables(self.screenItems(),path,embedStyle=True)
         dlg.Destroy()
     
 

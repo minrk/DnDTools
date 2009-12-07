@@ -130,6 +130,8 @@ class Item(object):
         # ET.SubElement(self.root, "itemtype").text=self.itemtype
         for entry in ["level", "name","slot","value","description","flavor"]:
             value = getattr(self, entry)
+            if value is None:
+                value = ""
             ET.SubElement(self.root, entry).text=str(value)
         # self.render_features(self.root)
         for key in self.keywords:
@@ -258,7 +260,7 @@ class Weapon(Item):
         return etree
     
 
-class Armor(Item):        
+class Armor(Item):
     """docstring for Armor"""
     itemtype="Armor"
     types="Cloth Leather Hide Chain Scale Plate LightShield HeavyShield".split()
@@ -287,13 +289,15 @@ class Armor(Item):
         return True
     
     def _subrepr(self):
-        return "%s AC %s check %s speed"%(self.ACBonus, self.armorCheck, self.speedCheck)
+        return "%s AC, %s, %s"%(self.ACBonus, self.armorCheck, self.speedCheck)
     
     def render(self):
         etree = Item.render(self)
         root = etree.getroot()
         for key in "ACBonus enhancement armorCheck speedCheck".split():
             value = getattr(self, key)
+            if value is None:
+                value = "-"
             ET.SubElement(self.root, key).text=str(value)
         return etree
     
