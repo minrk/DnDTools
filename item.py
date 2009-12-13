@@ -76,7 +76,16 @@ def HTMLCard(it):
                     txt = "%s: %s"%(p, definition)
                 else:
                     txt = text(p)
-                ET.SubElement(ul, "li").text=txt
+                feats = txt.split(':',1)
+                if len(feats) > 1:
+                    bold,feat=feats
+                    li = ET.SubElement(ul, "li")
+                    b = ET.SubElement(li,'b')
+                    b.text=bold+":"
+                    a = ET.SubElement(li, 'a')
+                    a.text=feat
+                else:
+                    ET.SubElement(ul, "li").text=text(txt)
     
     # features
     # if it.features:
@@ -84,7 +93,16 @@ def HTMLCard(it):
     ul=ET.SubElement(features, "ul")
     ul.text=" "
     for feat in it.features:
-        ET.SubElement(ul, "li").text=text(feat)
+        feats = feat.split(':',1)
+        if len(feats) > 1:
+            bold,feat=feats
+            li = ET.SubElement(ul, "li")
+            b = ET.SubElement(li,'b')
+            b.text=bold+":"
+            a = ET.SubElement(li, 'a')
+            a.text=feat
+        else:
+            ET.SubElement(ul, "li").text=text(feat)
     
     # bottom row
     ET.SubElement(card, "div", id="flavor").text=text(it.flavor)
