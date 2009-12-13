@@ -38,7 +38,8 @@ def HTMLCard(it):
         ET.SubElement(header, "div", id="slot", Class="littlebox").text=text(it.group)
     ET.SubElement(header, "div", id="name").text=text(it.name)
     if isweapon: # insert Weapon Group
-        ET.SubElement(header, "div", id="weapongroup", Class="littlebox").text=text(it.slot)
+        pass
+        # ET.SubElement(header, "div", id="weapongroup", Class="littlebox").text=text(it.slot)
     ET.SubElement(header, "div", id="description").text=text(it.description)
     if it.keywords:
         ET.SubElement(card, "div", id="keywords").text="Keywords: "+", ".join(it.keywords)
@@ -60,10 +61,10 @@ def HTMLCard(it):
         weapondiv=ET.SubElement(body, "div", id="weapondiv", Class="subclass")
         weapontable=ET.SubElement(weapondiv, "table", Class="weapontable")
         hrow = ET.SubElement(weapontable, "tr", Class="head")
-        for s in "Type Prof Damage Range".split():
+        for s in "Hand Type Prof Damage Range".split():
             ET.SubElement(hrow, "td").text=s
         hrow = ET.SubElement(weapontable, "tr")
-        for s in (it.weapontype, it.proficiency, it.dice, it.range):
+        for s in (it.slot, it.weapontype, it.proficiency, it.dice, it.range):
             ET.SubElement(hrow, "td").text=text(s)
         if it.properties:
             weaponprops=ET.SubElement(weapondiv, "div", id="properties")
