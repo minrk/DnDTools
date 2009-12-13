@@ -451,6 +451,7 @@ class InventoryPanel(ScrolledPanel):
         n = len(self.items)
         for i in range(index, n):
             self.rows[i].field.SetValue(self.rows[i+1].field.GetValue())
+            self.rows[i].checked.SetValue(self.rows[i+1].checked.GetValue())
         self.items.pop(index)
         # self.nitems -= 1
         self.rows[n-1].hide()
