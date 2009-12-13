@@ -32,10 +32,13 @@ def HTMLCard(it):
     
     # header
     header = ET.SubElement(card, "div", id="cardheader", Class=it.itemtype.lower())
-    ET.SubElement(header, "div", id="slot", Class="littlebox").text=text(it.slot)
+    if not isweapon:
+        ET.SubElement(header, "div", id="slot", Class="littlebox").text=text(it.slot)
+    else:
+        ET.SubElement(header, "div", id="slot", Class="littlebox").text=text(it.group)
     ET.SubElement(header, "div", id="name").text=text(it.name)
     if isweapon: # insert Weapon Group
-        ET.SubElement(header, "div", id="weapongroup", Class="littlebox").text=text(it.group)
+        ET.SubElement(header, "div", id="weapongroup", Class="littlebox").text=text(it.slot)
     ET.SubElement(header, "div", id="description").text=text(it.description)
     if it.keywords:
         ET.SubElement(card, "div", id="keywords").text="Keywords: "+", ".join(it.keywords)
@@ -84,8 +87,11 @@ def HTMLCard(it):
     
     # bottom row
     ET.SubElement(card, "div", id="flavor").text=text(it.flavor)
-    ET.SubElement(card, "div", id="value", Class="littlebox").text=text(it.value)
-    ET.SubElement(card, "div", id="level", Class="littlebox").text="Lvl "+it.level
+    value=it.value
+    if value and value[-1] in '1234567890':
+        value = value+'gp'
+    ET.SubElement(card, "div", id="value", Class="littlebox").text=text(value)
+    # ET.SubElement(card, "div", id="level", Class="littlebox").text="Lvl "+it.level
     # print tonicerstring(card)
     return card
     

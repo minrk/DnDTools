@@ -1,7 +1,7 @@
 ul{
 	margin: 0px;
-	line-height: 1.5em;
-	padding-top: 6px;
+	line-height: 1.4em;
+	padding-top: 2px;
 	margin-left: 1em;
 	padding-left: 1em;
 }
@@ -98,12 +98,22 @@ ul{
 /* subclass stuff */
 #armordiv{
 	border-bottom: 1px solid;
+	padding: 0px;
 }
 table.armortable{
 	width: 100%;
+	padding: 0px;
 	//background: #cccccc;
 	text-align: center;
+	font-size: xx-small;
 }
+td{
+	padding: 0px;
+}
+tr{
+	padding: 0px;
+}
+
 tr.head{
 	font-weight: bold;
 }
@@ -112,6 +122,9 @@ tr.head{
 table.weapontable{
 	width: 100%;
 	border-bottom: 1px solid;
+	table-layout: ;
+	font-size: xx-small;
+
 	//background: #cccccc;
 	text-align: center;
 }
@@ -136,14 +149,17 @@ table.weapontable{
 	color: #12a;
 }
 #flavor{
-	margin-top: -74px;
-	height: 65px;
+	margin-top: -62px;
+	height: 53px;
 	border-top: dashed 1px;
 	font-style: italic;
 	font-family: serif;
+	line-height: 1.2em;
+
 	//background: #999;
 	vertical-align: bottom;
 	padding: 4px;
+	padding-top: 1px;
 	bottom: 10px;
 	z-index: 99;
 
@@ -158,21 +174,22 @@ table.weapontable{
 	vertical-align: bottom;
 	background: #ffffaa;
 	width: 32px;
-	height: 12px;
-	margin-top: -17px;
+	height: 10px;
+	margin-top: -14px;
 	z-index: 2;
 }
 #value{
+	float: right;
 	font-size: small;
 	border-bottom: none;
 	border-left: none;
-	padding:  4px;
+	padding:  0px;
 	vertical-align: bottom;
-	position: absolute;
+/*	position: absolute;*/
 	background: #ffffaa;
 	width: 32px;
-	height: 12px;
-	margin-top: -17px;
+	height: 10px;
+	margin-top: -14px;
 /*		z-index: -1;*/
 
 }
