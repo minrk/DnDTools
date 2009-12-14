@@ -401,7 +401,7 @@ class InventoryPanel(ScrolledPanel):
         self.load.Bind(wx.EVT_BUTTON, self.LoadItems)
         self.save=wx.Button(self, label="Save All to XML")
         self.save.Bind(wx.EVT_BUTTON, self.SaveItems)
-        self.render=wx.Button(self, label="Export to HTML+XML")
+        self.render=wx.Button(self, label="Checked to HTML+XML")
         self.render.Bind(wx.EVT_BUTTON, self.RenderHTML)
         for i in range(MAX_ITEMS):
             self.rows.append(InventoryRow(self, i))
