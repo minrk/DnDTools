@@ -9,7 +9,7 @@ ul{
 	page-break-before: always;
 }
 #pagetable table{
-	padding: 0px;
+	padding: 10px;
 }
 
 #pagetable td{
@@ -20,8 +20,8 @@ ul{
 #card {
 //	background: #222222;
 	border: 2px solid;
-	width: 250px;
-	height: 320px;
+	width: 375px;
+	height: 480px;
 	padding: 0px;
 	font-family: sans-serif;
 	font-size: x-small;
@@ -41,7 +41,7 @@ ul{
 #cardheader {
 	background: #ffcc33;
 	padding: 2px;
-	height: 25%; 
+	height: 24%; 
 	border-bottom: solid 1px;
 }
 #card div.weapon{
@@ -67,12 +67,14 @@ ul{
 	float:  right;
 	vertical-align: text-top;
 	background: #ffffaa;
+	padding: 2px;
 }
 #weapongroup{
 	float:  right;
 	vertical-align: text-top;
 	background: #ffffaa;
 	border: solid 1px;
+	padding: 2px;
 }
 
 /* Keyword section*/
@@ -91,7 +93,7 @@ ul{
 #cardbody{
 	margin-top: 0px ;
 	background: #ffffaa;
-	height: 73.5%;
+	height: 75%;
 	padding: 0px;
 }
 
@@ -149,7 +151,7 @@ table.weapontable{
 	color: #12a;
 }
 #flavor{
-	margin-top: -62px;
+	margin-top: -63px;
 	height: 53px;
 	border-top: dashed 1px;
 	font-style: italic;
@@ -159,7 +161,7 @@ table.weapontable{
 	//background: #999;
 	vertical-align: bottom;
 	padding: 4px;
-	padding-top: 1px;
+	padding-top: 0px;
 	bottom: 10px;
 	z-index: 99;
 
@@ -178,20 +180,25 @@ table.weapontable{
 	margin-top: -14px;
 	z-index: 2;
 }
-#value{
+#value {
 	float: right;
 	font-size: xx-small;
-/*	border-bottom: none;*/
-/*	border-left: none;*/
-/*	padding:  0px;*/
-	vertical-align: bottom;
-/*	line-height: 1em;*/
-/*	position: absolute;*/
-	background: #ffffaa;
-	width: 32px;
+	border-style: solid;
+	border-width: 1px;
+	border-bottom: none;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	background: eeeeee;
+	font-family: sans-serif;
+	font-size: x-small;
 	height: 12px;
+	text-align: center;
+
+
 /*	margin: 0px;*/
-	margin-top: -14px;
+	margin-top: -8px;
 /*		z-index: -1;*/
 
 }

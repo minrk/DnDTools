@@ -6,6 +6,9 @@ from xml.etree import ElementTree as ET
 lorem="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 
 slots="Head Neck Waist MainHand OffHand Body Arm Hand Ring Feet Symbol/Ki Tattoo".split()
+
+CARDSPERPAGE=4
+CARDSPERROW=2
 def escape(multiline):
     return multiline.replace("\n","<br/>")
 def tonicerstring(root,tags=None,html=False):
@@ -118,10 +121,10 @@ def HTMLCard(it):
 def HTMLCardList(itemlist):
     pages = []
     for n,it in enumerate(itemlist):
-        if n%9 == 0:
-            pagetable = ET.Element("table",cellpadding="0",cellspacing="1px")
+        if n%CARDSPERPAGE == 0:
+            pagetable = ET.Element("table",cellpadding="0",cellspacing="5px")
             pages.append(pagetable)
-        if n%3 == 0:
+        if n%CARDSPERROW == 0:
             row = ET.SubElement(pagetable, "tr")
         ET.SubElement(row, "td").append(HTMLCard(it))
     
@@ -369,18 +372,18 @@ def writeItemList(itemlist, fname,mode='w'):
     fp.close()
 
 def writeHTMLItemTables(itemlist, fname,separate=False,embedStyle=False,openAfter=True):
-    if separate:
-        for i in range((len(itemlist)-1)/9+1):
+    if separate and len(itemlist) > CARDSPERPAGE:
+        for i in range((len(itemlist)-1)/CARDSPERPAGE+1):
             writeHTMLItemTables(("page%i."%i)+fname)
         return
     pages = HTMLCardList(itemlist)
     fp = open(fname, 'w')
     if embedStyle:
-        sfp = open("style.css")
+        sfp = open("bigstyle.css")
         style="<style>%s</style>"%sfp.read()
         sfp.close()
     else:
-        style="""<link rel="stylesheet" href="style.css" type="text/css" />"""
+        style="""<link rel="stylesheet" href="bigstyle.css" type="text/css" />"""
     fp.write("""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
     
