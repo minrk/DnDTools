@@ -1,5 +1,5 @@
 
-from os.path import dirname,basename
+from os.path import dirname,basename,splitext
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 # from item import Item, Armor,Weapon,slots
@@ -397,11 +397,11 @@ class InventoryPanel(ScrolledPanel):
     
     def buildForm(self):
         """builds the form"""
-        self.load=wx.Button(self, label="Load Items")
+        self.load=wx.Button(self, label="Load from XML")
         self.load.Bind(wx.EVT_BUTTON, self.LoadItems)
-        self.save=wx.Button(self, label="Save Items")
+        self.save=wx.Button(self, label="Save All to XML")
         self.save.Bind(wx.EVT_BUTTON, self.SaveItems)
-        self.render=wx.Button(self, label="Render HTML Cards")
+        self.render=wx.Button(self, label="Export to HTML+XML")
         self.render.Bind(wx.EVT_BUTTON, self.RenderHTML)
         for i in range(MAX_ITEMS):
             self.rows.append(InventoryRow(self, i))
@@ -435,7 +435,7 @@ class InventoryPanel(ScrolledPanel):
                     print "no such item %s"%row.field.GetValue()
                 screened.append(it)
         return screened
-        
+    
     def addItem(self, it):
         if it.isin(self.items):
             return False
@@ -476,9 +476,11 @@ class InventoryPanel(ScrolledPanel):
                             wildcard="*.XML|*.xml",style=wx.FD_SAVE)
         if dlg.ShowModal():
             path=dlg.GetPath()
+            if not path:
+                return
             self.activeFile=path
             self.activeDir=dirname(path)
-            item.writeItemList(self.screenItems(),path)
+            item.writeItemList(self.items,path)
         dlg.Destroy()
     
     def RenderHTML(self, evt):
@@ -487,7 +489,12 @@ class InventoryPanel(ScrolledPanel):
                             wildcard="*.HTML|*.html",style=wx.FD_SAVE)
         if dlg.ShowModal():
             path=dlg.GetPath()
-            item.writeHTMLItemTables(self.screenItems(),path,embedStyle=True)
+            if not path:
+                return
+            items = self.screenItems()
+            item.writeHTMLItemTables(items,path,embedStyle=True)
+            xmlname = splitext(path)[0]+'.xml'
+            item.writeItemList(items,xmlname)
         dlg.Destroy()
     
 
