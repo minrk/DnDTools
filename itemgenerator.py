@@ -1,6 +1,6 @@
 
 from os.path import dirname,basename,splitext
-import wx
+import glob,wx
 from wx.lib.scrolledpanel import ScrolledPanel
 # from item import Item, Armor,Weapon,slots
 import item 
@@ -403,6 +403,10 @@ class InventoryPanel(ScrolledPanel):
         self.save.Bind(wx.EVT_BUTTON, self.SaveItems)
         self.render=wx.Button(self, label="Checked to HTML+XML")
         self.render.Bind(wx.EVT_BUTTON, self.RenderHTML)
+        sheets = glob.glob("*.css")
+        self.stylesheets = wx.Choice(self)
+        self.stylesheets.AppendItems(strings=sheets)
+        self.stylesheets.SetSelection(0)
         for i in range(MAX_ITEMS):
             self.rows.append(InventoryRow(self, i))
     
@@ -416,6 +420,10 @@ class InventoryPanel(ScrolledPanel):
         sizer.Add(self.load, **bulk)
         sizer.Add(self.save, **bulk)
         sizer.Add(self.render, **bulk)
+        sizer.Add(wx.StaticText(self, label="Stylesheet:"), **bulk)
+        sizer.Add(self.stylesheets,**bulk)
+        boxSizer.Add(sizer)
+        # sizer=wx.BoxSizer(orient=wx.HORIZONTAL)
         boxSizer.Add(sizer)
         for row in self.rows:
             boxSizer.Add(row.sizer)
@@ -492,7 +500,8 @@ class InventoryPanel(ScrolledPanel):
             if not path:
                 return
             items = self.screenItems()
-            item.writeHTMLItemTables(items,path,embedStyle=True)
+            sheet = self.stylesheets.GetStringSelection()
+            item.writeHTMLItemTables(items,path,stylesheet=sheet, embedStyle=True)
             xmlname = splitext(path)[0]+'.xml'
             item.writeItemList(items,xmlname)
         dlg.Destroy()

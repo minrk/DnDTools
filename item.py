@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-from os.path import isfile
+from os.path import isfile, basename, join as pjoin
 from subprocess import Popen
 from xml.etree import ElementTree as ET
 lorem="Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
@@ -371,7 +371,7 @@ def writeItemList(itemlist, fname,mode='w'):
     fp.write("</itemlist>\n")
     fp.close()
 
-def writeHTMLItemTables(itemlist, fname,separate=False,embedStyle=False,openAfter=True):
+def writeHTMLItemTables(itemlist, fname,separate=False,stylesheet="bigstyle.css",embedStyle=False,openAfter=True):
     if separate and len(itemlist) > CARDSPERPAGE:
         for i in range((len(itemlist)-1)/CARDSPERPAGE+1):
             writeHTMLItemTables(("page%i."%i)+fname)
@@ -379,7 +379,12 @@ def writeHTMLItemTables(itemlist, fname,separate=False,embedStyle=False,openAfte
     pages = HTMLCardList(itemlist)
     fp = open(fname, 'w')
     if embedStyle:
-        sfp = open("bigstyle.css")
+        try:
+            sfp = open(stylesheet)
+        except:
+            # import os.path
+            here = abspath(dirname(__file__))
+            sfp = open(pjoin(here, stylesheet))
         style="<style>%s</style>"%sfp.read()
         sfp.close()
     else:
