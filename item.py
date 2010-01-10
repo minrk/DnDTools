@@ -118,13 +118,13 @@ def HTMLCard(it):
     return card
     
 
-def HTMLCardList(itemlist):
+def HTMLCardList(itemlist, perrow=CARDSPERROW, perpage=CARDSPERPAGE):
     pages = []
     for n,it in enumerate(itemlist):
-        if n%CARDSPERPAGE == 0:
+        if n%perpage == 0:
             pagetable = ET.Element("table",cellpadding="0",cellspacing="5px")
             pages.append(pagetable)
-        if n%CARDSPERROW == 0:
+        if n%perrow == 0:
             row = ET.SubElement(pagetable, "tr")
         ET.SubElement(row, "td").append(HTMLCard(it))
     
@@ -371,13 +371,19 @@ def writeItemList(itemlist, fname,mode='w'):
     fp.write("</itemlist>\n")
     fp.close()
 
-def writeHTMLItemTables(itemlist, fname,separate=False,stylesheet="bigstyle.css",embedStyle=False,openAfter=True):
+def writeHTMLItemTables(itemlist, fname,separate=False,stylesheet="big.css",embedStyle=False,openAfter=True):
     if separate and len(itemlist) > CARDSPERPAGE:
         for i in range((len(itemlist)-1)/CARDSPERPAGE+1):
             writeHTMLItemTables(("page%i."%i)+fname)
         return
-    pages = HTMLCardList(itemlist)
     fp = open(fname, 'w')
+    if "big" in stylesheet:
+        perrow=2
+        perpage=4
+    else:
+        perrow=3
+        perpage=9
+    pages = HTMLCardList(itemlist,perrow,perpage)
     if embedStyle:
         try:
             sfp = open(stylesheet)
@@ -387,6 +393,7 @@ def writeHTMLItemTables(itemlist, fname,separate=False,stylesheet="bigstyle.css"
             sfp = open(pjoin(here, stylesheet))
         style="<style>%s</style>"%sfp.read()
         sfp.close()
+        # if sfp
     else:
         style="""<link rel="stylesheet" href="bigstyle.css" type="text/css" />"""
     fp.write("""<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
