@@ -78,6 +78,13 @@ class Monster(object):
         return s
     def __repr__(self):
         return "< %s: Level %i %s >"%(self.name, self.level, self.group or self.role)
+    
+    def view(self):
+        url = "http://www.wizards.com/dndinsider/compendium/monster.aspx?id=%i"%self.id
+        print url
+        if sys.platform == "darwin":
+            os.system("open %s"%url)
+        # else:
 
 # sorting keys
 HP = lambda m: m.HP
@@ -363,6 +370,20 @@ class MonsterDB(object):
         will return the solos in each of the roles.
         """
         return [ group.intersect(g) for g in (self.artillery, self.brutes, self.controllers, self.skirmishers, self.soldiers) ]
+    
+    def search(self, keywords,strict=False):
+        """
+        If strict: do substring match on names
+        else: do unordered keyword search
+        default: not strict"""
+        q = self.query
+        if strict:
+            q = q.filter(Monster.name.like("%%%s%%"%keywords))
+        else:
+            for word in keywords.split():
+                q = q.filter(Monster.name.like("%%%s%%"%(word)))
+                print q.count()
+        return q
     
     # def add
 
