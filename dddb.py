@@ -18,8 +18,10 @@ etc.
 
 
 import re,os
+pjoin = os.path.join
 from subprocess import Popen, PIPE
 from string import printable
+from random import randint
 
 from xml.etree import ElementTree as etree
 from urllib import urlretrieve,urlencode
@@ -43,6 +45,9 @@ root_url = "http://www.wizards.com/dndinsider/compendium/compendiumSearch.asmx"
 def unescape(s):
     s = s.replace("\xe2\x80\x99","'")
     return "".join([ c for c in s if c in printable ])
+
+roles = "Artillery Brute Controller Skirmisher Soldier".split()
+groups = "Minion Standard Elite Solo".split()
 
 class Monster(object):
     """An object to represent Monsters."""
@@ -74,7 +79,7 @@ class Monster(object):
             s += " (Leader)"
         s += "\n    "
         s += "HP: %i  AC: %i  Fort: %i  Ref: %i  Will: %i"%tuple([self.HP]+self.defenses)
-        s += "\n    Compendium ID#%i"%self.id
+        s += "\n    Compendium ID #%i"%self.id
         return s
     def __repr__(self):
         return "< %s: Level %i %s >"%(self.name, self.level, self.group or self.role)
@@ -92,7 +97,29 @@ AC = lambda m: m.AC
 fort = lambda m: m.fortitude
 ref = lambda m: m.reflex
 will = lambda m: m.will
+alldef = lambda m: mean(m.defenses)
+flatdef = lambda m: mean(m.defenses) - m.level # this should come out flat when plotted vs level
+lifetime = lambda m: m.HP * flatdef(m)
+better_life = lambda m: m.HP * ( mean(m.defenses) - .9*m.level-4)
 
+to_hit = lambda m: mean([m.AC-2, m.fortitude, m.reflex, m.will]) - 4 - m.level/2 - (m.level+3)/5 - m.level/8 - (m.level+5)/10
+
+# Basic AC roll, assume +2 Proficiency, 18 starting skill, weapon at-level, weapon focus
+#                        prof base level/2      weapon        skill train   expertise
+hit_AC = lambda m: m.AC - ac_bonus(m.level)
+# for the Rev:
+hit_ref = lambda m: m.reflex - rev_bonus(m.level)
+hit_fort = lambda m: m.fortitude - rev_bonus(m.level)
+
+rev_bonus = lambda level:     4 + level/2 + (level+2)/5 + (level+4)/8 + (level+5)/10
+ac_bonus = lambda level:  2 + 4 + level/2 + (level+2)/5 + (level)/8 + (level+5)/10
+
+# hit_X is what you have to roll (+ proficiency-2 and feat bonusus) to hit, 
+        # assuming you start with 18 in relevant skill, put 1 in the skill each 4th level, 
+        # and get a new weapon at the third level of your half-tier (+1 for L3-7, +2 for L8-12, etc.)
+        # and have Weapon/Implement Expertise by level 5
+
+tierHP = lambda level: 20+4.5*level*255/30
 
 def fetch_with_safari(url):
     """This is so we can use Safari's D&DI login cookies"""
@@ -352,11 +379,17 @@ class MonsterDB(object):
         return [self.artillery, self.brutes, self.controllers, self.skirmishers, self.soldiers]
     
     @property
+    def random(self):
+        idx = randint(0,self.query.count()-1)
+        return self.all[idx]
+    
+    @property
     def all(self):
-        return self.query.all()
+        return self.query
     
     
-    def levels(self,levels):
+    
+    def level(self,levels):
         """return all monsters in a set of levels"""
         if isinstance(levels, int):
             return self.query.filter_by(level=levels)
@@ -369,7 +402,16 @@ class MonsterDB(object):
         >>> M.by_role(M.solos)
         will return the solos in each of the roles.
         """
-        return [ group.intersect(g) for g in (self.artillery, self.brutes, self.controllers, self.skirmishers, self.soldiers) ]
+        return [ group.intersect(g) for g in self.roles ]
+    
+    def by_group(self,group):
+        """Split a group into groups for each Group Role (Solo, Minion, etc.). starting must still be in query form, not a list.
+        Returns 4 groups, by size: minion, standard, elite, solo
+        
+        >>> M.by_group(M.skirmishers)
+        will return the skirmishers in each of the group roles.
+        """
+        return [ group.intersect(g) for g in self.groups ]
     
     def search(self, keywords,strict=False):
         """
@@ -395,15 +437,16 @@ def connectDB(fname='monsters.db'):
     metadata.create_all(engine, checkfirst=True)
     return engine
 
-
+######################################################
 # plotting functions
+######################################################
 
 def plot_groups(key, *groups):
     """Plot a single value versus level for a number of groups of monsters. Each group will be plotted as a different color
     Keys are: AC, fort, reflex, will
     >>> M = MonsterDB(connectDB())
     >>> plot(AC,M.solos,M.elites,M.standards) 
-    >>> plot(reflex, M.leaders, M.levels(range(5)))
+    >>> plot(reflex, M.leaders, M.level(range(5)))
     
     You can also define any function that returns a number:
     >>> def maxdef(m): return max(m.AC, m.reflex,m.fortitude,m.will)
@@ -440,14 +483,13 @@ def plot_defenses(*groups):
             off+=eps
     legend("AC Fort Ref Will".split(), loc=0).get_frame().set_alpha(0.75)
 
-def defense_hist(group):
+def defense_hist(group,title=""):
     """Makes aligned histograms for each defense for a group of monsters.
     Useful for comparing high/low defenses.
     
     # defenses for all non-minion L8s:
     >>>defense_hist(M.get(Monster.group != 'Minion', level=8)) 
     
-    >>>de
     
     """
     data = array([m.defenses for m in group])
@@ -466,6 +508,7 @@ def defense_hist(group):
     subplot(411)
     do_hist(AC,facecolor="k",edgecolor="w")
     pylab.ylabel("AC")
+    pylab.title(title)
     
     subplot(412)
     do_hist(fort,facecolor="r")
@@ -478,13 +521,68 @@ def defense_hist(group):
     subplot(414)
     do_hist(will,facecolor="b")
     pylab.ylabel("Will")
-    
+    if isinstance(group,orm.Query):
+        count = group.count()
+    else:
+        count = len(group)
+    pylab.xlabel("%i total"%count)
 
-def plot_roles(group,M):
+def plot_by_role(group,M):
     """This splits a group into each role, and plots the number of creatures in the group that occupy each role.
     Must pass a MonsterDB object, so it can split the group into roles."""
     gps = M.by_role(group)
     figure()
-    bar(arange(5), [g.count() for g in gps])
-    xticks(numpy.arange(5)+.4, "Artillery Brute Controller Skirmisher Soldier".split())
+    bar(arange(len(gps)), [g.count() for g in gps])
+    xticks(numpy.arange(len(gps))+.4, roles)
+
+def plot_by_group(group,M):
+    """This splits a group into each group role, and plots the number of creatures in the group that occupy each role.
+    Must pass a MonsterDB object, so it can split the group into roles."""
+    gps = M.by_group(group)
+    figure()
+    bar(arange(len(gps)), [g.count() for g in gps])
+    xticks(numpy.arange(len(gps))+.4, groups)
+
+def plot_counts(M, groups, names=None):
+    levels = range(1,31)
+    figure()
+    off=0
+    colors = "cbgrmyk"[:len(groups)]
+    grid(True)
+    gcf().set_figwidth(16)
+    w = 1./(len(groups)+1)
+    if names is None:
+        names = [None]*len(groups)
+    for c,group,name in zip(colors, groups, names):
+        # print group
+        heights = [group.intersect(M.level(i)).count() for i in levels]
+        # print heights
+        bar(array(levels)+off, heights,width=w, facecolor=c,label=name)
+        off += w
+    if names[0] is not None:
+        legend(loc=0)
+    xticks(array(levels), ["      %i"%l for l in levels])
+    xlim(1,31)
+    xlabel("Level")
     
+def mean_key(key, group):
+    """returns the mean of the key for each level. Good for translating scatter plot data to lines."""
+    return array([ mean([ key(m) for m in group.filter_by(level=i) ]) for i in range(1,31)] )
+
+def plot_group_lines(key, *groups):
+    figure()
+    grid(True)
+    pylab.xlabel("Level")
+    for g in groups:
+        plot(range(1,31), mean_key(key,g))
+
+
+def plot_all_levels(M,root="/Volumes/zino/www/DandD/dddb/levels"):
+    for level in range(1,31):
+        gp = M.level(level)
+        defense_hist(gp, "All Level %i"%(level))
+        savefig(pjoin(root, "L%i.png"%level))
+        close()
+
+legend_roles = lambda : legend(roles, loc=0).get_frame().set_alpha(0.75)
+legend_groups = lambda : legend(groups, loc=0).get_frame().set_alpha(0.75)
