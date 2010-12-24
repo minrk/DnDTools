@@ -28,6 +28,7 @@ def event_from_row(row_soup, day):
     if a is not None:
         url = base_url + a['href']
         ev.add("url", url)
+        ev.add("description", url)
     else:
         a = row_soup.find('a', {'class' : 'CalendarEventNoLink'})
     
@@ -41,7 +42,6 @@ def events_from_day(day_soup, month, year):
     span = daydiv.find('span')
     days = int(span.contents[0])
     day = date(year, month, days)
-    print day
     event_rows = day_soup.findAll('div', {'class' : 'CalendarEventRow'})
     events = []
     for i,row in enumerate(event_rows):
@@ -59,6 +59,7 @@ def events_from_day(day_soup, month, year):
 def scrape_month(month,year):
     """Scrape the calendar page for a month, and return a list of all Events.
     in that month."""
+    print "Scraping %02i/%i"%(month,year)
     url = calendar_url%(month,year)
     req = urllib2.urlopen(url)
     if req.getcode() != 200:
@@ -77,6 +78,7 @@ def generate_calendar(start=first_month, months=-1):
     Default behavior will get all data ever, but it can be limited by the start
     and months arguments."""
     cal = Calendar()
+    cal.add('X-WR-CALNAME', 'D&D Content')
     m,y = start
     months = int(months)
     while months != 0:
