@@ -167,17 +167,17 @@ table.weapontable{
 
 }
 #level{
-	font-size: small;
-	padding:  4px;
+	font-size: xx-small;
+	padding-left:  4px;
 	border-bottom: none;
 	border-right: none;
-
 	float: right;
 	vertical-align: bottom;
 	background: #ffffaa;
 	width: 32px;
-	height: 10px;
-	margin-top: -14px;
+	height: 12px;
+	margin-top: -8px;
+	margin-right: -1px;
 	z-index: 2;
 }
 #value {
@@ -186,14 +186,15 @@ table.weapontable{
 	border-style: solid;
 	border-width: 1px;
 	border-bottom: none;
-	padding-left: 5px;
-	padding-right: 5px;
+	padding-left: 4px;
+	padding-right: 4px;
 	padding-top: 0px;
 	padding-bottom: 0px;
-	background: eeeeee;
+/*  background: eeeeee;*/
 	font-family: sans-serif;
 	font-size: x-small;
 	height: 12px;
+	width: 40px;
 	text-align: center;
 
 

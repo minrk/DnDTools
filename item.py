@@ -39,7 +39,15 @@ def HTMLCard(it):
         ET.SubElement(header, "div", id="slot", Class="littlebox").text=text(it.slot)
     else:
         ET.SubElement(header, "div", id="slot", Class="littlebox").text=text(it.group)
-    ET.SubElement(header, "div", id="name").text=text(it.name)
+    
+    name = it.name
+    
+    for i in range(1,20):
+        if str(i) in it.enhancement:
+            name += " %s"%it.enhancement
+            # break
+    # if it.enhancement
+    ET.SubElement(header, "div", id="name").text=text(name)
     if isweapon: # insert Weapon Group
         pass
         # ET.SubElement(header, "div", id="weapongroup", Class="littlebox").text=text(it.slot)
@@ -113,7 +121,7 @@ def HTMLCard(it):
     if value and value[-1] in '1234567890':
         value = value+'gp'
     ET.SubElement(card, "div", id="value", Class="littlebox").text=text(value)
-    # ET.SubElement(card, "div", id="level", Class="littlebox").text="Lvl "+it.level
+    ET.SubElement(card, "div", id="level", Class="littlebox").text="Lvl "+it.level
     # print tonicerstring(card)
     return card
     
@@ -148,6 +156,7 @@ class Item(object):
             self.value="0gp"
             self.description=lorem
             self.flavor=lorem
+            self.enhancement="-"
             self.features=[]
             self.keywords=[]
             self.level="1"
@@ -156,7 +165,7 @@ class Item(object):
     def render(self):
         self.root = ET.Element(self.itemtype)
         # ET.SubElement(self.root, "itemtype").text=self.itemtype
-        for entry in ["level", "name","slot","value","description","flavor"]:
+        for entry in ["level", "name","slot","value","description","flavor", "enhancement"]:
             value = getattr(self, entry)
             if value is None:
                 value = ""
@@ -174,7 +183,7 @@ class Item(object):
             shortname = self.name[:21]+"..."
         else:
             shortname=self.name
-        return "Lvl %s %s: '%s' %s %s"%(self.level,self.itemtype, shortname, self.slot, self._subrepr())
+        return "Lvl %s %s %s: '%s' %s %s"%(self.level, self.itemtype, self.enhancement, shortname, self.slot, self._subrepr())
     
     _subrepr=lambda self: ""
     
@@ -184,7 +193,7 @@ class Item(object):
         return start.replace("><",">\n    <").replace("    </%s>"%self.itemtype,"</%s>"%self.itemtype)
     
     def __eq__(self,other):
-        for atr in "level name slot value description flavor".split():
+        for atr in "level name slot value enhancement description flavor".split():
             if getattr(self,atr) != getattr(other,atr):
                 # print "%s %s != %s"%(atr, getattr(self,atr),getattr(other,atr))
                 return False
@@ -206,7 +215,7 @@ class Item(object):
         else: # assume we got root
             self.root = etree
         assert self.root.tag.lower() == self.itemtype.lower(), "wrong type"
-        for key in "name level slot value description flavor".split():
+        for key in "name level slot value description flavor enhancement".split():
             setattr(self, key, getattr(self.root.find(key),"text",""))
         
         self.keywords = []
@@ -264,7 +273,7 @@ class Weapon(Item):
     def __eq__(self,other):
         if not Item.__eq__(self, other):
             return False
-        for atr in "group proficiency dice range".split():
+        for atr in "group proficiency dice range enhancement".split():
             if getattr(self,atr) != getattr(other,atr):
                 # print "a.%s %s != %s"%(atr, getattr(self,atr),getattr(other,atr))
                 return False
@@ -294,7 +303,7 @@ class Armor(Item):
     types="Cloth Leather Hide Chain Scale Plate LightShield HeavyShield".split()
     def __init__(self, name):
         self.ACBonus="+1"
-        self.enhancement="-"
+        # self.enhancement="-"
         self.armorCheck="-"
         self.speedCheck="-"
         self.slot=self.types[0]
@@ -302,7 +311,7 @@ class Armor(Item):
     
     def load(self, etree):
         Item.load(self, etree)
-        for key in "ACBonus enhancement armorCheck speedCheck".split():
+        for key in "ACBonus armorCheck speedCheck".split():
             # print key, getattr(self.root.find(key),"text","")
             setattr(self, key, getattr(self.root.find(key),"text",""))
             # print getattr(self, key)
@@ -322,7 +331,7 @@ class Armor(Item):
     def render(self):
         etree = Item.render(self)
         root = etree.getroot()
-        for key in "ACBonus enhancement armorCheck speedCheck".split():
+        for key in "ACBonus armorCheck speedCheck".split():
             value = getattr(self, key)
             if value is None:
                 value = "-"

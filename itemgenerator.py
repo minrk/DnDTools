@@ -1,6 +1,6 @@
 
 from os.path import dirname,basename,splitext
-import glob,wx
+import glob,wx,sys
 from wx.lib.scrolledpanel import ScrolledPanel
 # from item import Item, Armor,Weapon,slots
 import item 
@@ -31,6 +31,12 @@ class DandDGUI(wx.Notebook):
     
     def OnLoad(self):
         """This is a test function, don't keep it"""
+        # return
+        for path in sys.argv[1:]:
+            itemlist = item.loadItemList(path)
+            for it in itemlist:
+                self.inv.addItem(it)
+            # self.
         return
         it = item.Item("Bigby's Thing")
         it.slot = item.slots[2]
@@ -55,6 +61,7 @@ class DandDGUI(wx.Notebook):
         it.value = panel.value.GetValue()
         it.level=panel.level.GetStringSelection() or ""
         it.slot=panel.slot.GetStringSelection() or ""
+        it.enhancement=panel.enhancement.GetStringSelection() or ""
         keywordstr = str(panel.keywords.GetValue()).strip()
         if keywordstr:
             it.keywords = map(str.strip, map(str, keywordstr.split(",")))
@@ -76,7 +83,7 @@ class DandDGUI(wx.Notebook):
             it.range = (panel.range.GetValue() or "-")
         
         elif panel is self.ap:
-            for atr in "ACBonus enhancement armorCheck speedCheck".split():
+            for atr in "ACBonus armorCheck speedCheck".split():
                 setattr(it, atr,getattr(panel,atr).GetStringSelection() or "")
         self.inv.addItem(it)
         # self.SetSelection(0)
@@ -97,6 +104,7 @@ class DandDGUI(wx.Notebook):
 class ItemPanel(ScrolledPanel):
     """The GUI"""
     levels=map(str, range(1,31))
+    enhancements = ['-']+[ '+%i'%i for i in range(1,11) ]
     slots=item.slots
     buildSubclass=lambda self: None
     layoutSubclass=lambda self: None
@@ -137,12 +145,15 @@ class ItemPanel(ScrolledPanel):
         
         self.level.SetStringSelection(it.level)
         self.slot.SetStringSelection(it.slot)
+        self.enhancement.SetStringSelection(it.enhancement)
             
             
         
     def buildForm(self):
         """builds the form"""
         self.name = wx.TextCtrl(self, size=(300,LINES))
+        self.enhancement=wx.Choice(self)
+        self.enhancement.AppendItems(strings=self.enhancements)
         self.level=wx.Choice(self)
         self.level.AppendItems(strings=self.levels)
         self.slot=wx.Choice(self)
@@ -184,6 +195,10 @@ class ItemPanel(ScrolledPanel):
         sizer=wx.BoxSizer(orient=wx.HORIZONTAL)
         sizer.Add(wx.StaticText(self, label="Name:"),**minor)
         sizer.Add(self.name,**bulk)
+        boxSizer.Add(sizer,**bulk)
+        sizer=wx.BoxSizer(orient=wx.HORIZONTAL)
+        sizer.Add(wx.StaticText(self, label="Enhancement:"),**minor)
+        sizer.Add(self.enhancement,**minor)
         sizer.Add(wx.StaticText(self, label="Level:"),**minor)
         sizer.Add(self.level,**minor)
         sizer.Add(wx.StaticText(self, label="Slot:"),**minor)
@@ -245,6 +260,7 @@ class WeaponPanel(ItemPanel):
     subclassFlags=bulk
     slots="MainHand OffHand TwoHand".split()
     proficiencies=["+%i"%i for i in range(1,10) ]
+    # enhancements=["+%i"%i for i in range(0,11) ]
     dices=["%id%i"%(n,s) for n in range(1,4) for s in range(4,13,2)+[20] ]
     
     def loadItem(self,it):
@@ -263,6 +279,7 @@ class WeaponPanel(ItemPanel):
         self.weapontype=wx.Choice(self)
         self.weapontype.AppendItems(item.Weapon.types)
         self.weapontype.Bind(wx.EVT_CHOICE, self.OnType)
+        # self.enhancementLabel=
         self.range=wx.TextCtrl(self,size=(64,LINES))
         self.rangeLabel=wx.StaticText(self, label="Range")
         self.properties=wx.TextCtrl(self, size=(128,LINES))
@@ -271,11 +288,14 @@ class WeaponPanel(ItemPanel):
         fsizer = wx.FlexGridSizer(rows=2,cols=5,hgap=8)
         flag=wx.ALIGN_CENTER
         fsizer.AddMany([(wx.StaticText(self, label="Prof"),flag),
+                        # (wx.StaticText(self, label="Enhancement"), flag),
                         (wx.StaticText(self, label="Dice"),flag),
                         (wx.StaticText(self, label="Group"),flag),
                         (wx.StaticText(self, label="Class"),flag),
                         (self.rangeLabel,flag),
-                        (self.proficiency,flag),(self.dice,flag),
+                        
+                        (self.proficiency,flag),# (self.enhancement, flag),
+                        (self.dice,flag),
                         (self.group,flag),(self.weapontype,flag),
                         (self.range,flag)]
         )
@@ -303,7 +323,7 @@ class ArmorPanel(ItemPanel):
     
     def loadItem(self,it):
         ItemPanel.loadItem(self, it)
-        for choice in "ACBonus enhancement armorCheck speedCheck".split():
+        for choice in "ACBonus armorCheck speedCheck".split():
             getattr(self, choice).SetStringSelection(getattr(it, choice,""))
     
     def buildSubclass(self):
@@ -312,9 +332,9 @@ class ArmorPanel(ItemPanel):
         for i in range(1,15):
             self.ACBonus.Append("+%i"%i)
         
-        self.enhancement=wx.Choice(self)
-        for i in range(0,19):
-            self.enhancement.Append("+%i"%i)
+        # self.enhancement=wx.Choice(self)
+        # for i in range(0,19):
+        #     self.enhancement.Append("+%i"%i)
         
         self.armorCheck=wx.Choice(self)
         self.armorCheck.AppendItems("- -1 -2 -3".split())
@@ -323,13 +343,13 @@ class ArmorPanel(ItemPanel):
         self.speedCheck.AppendItems("- -1 -2 -3".split())
     
     def layoutSubclass(self):
-        sizer = wx.FlexGridSizer(rows=2,cols=4,hgap=8)
+        sizer = wx.FlexGridSizer(rows=2,cols=3,hgap=8)
         flag=wx.ALIGN_CENTER
         sizer.AddMany([(wx.StaticText(self, label="AC"),flag),
-                        (wx.StaticText(self, label="Enhancement"),flag),
+                        # (wx.StaticText(self, label="Enhancement"),flag),
                         (wx.StaticText(self, label="Check"),flag),
                         (wx.StaticText(self, label="Speed"),flag),
-                        (self.ACBonus,flag),(self.enhancement,flag),
+                        (self.ACBonus,flag),#(self.enhancement,flag),
                         (self.armorCheck,flag),(self.speedCheck,flag)]
         )
         return sizer
