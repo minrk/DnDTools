@@ -46,7 +46,7 @@ def unescape(s):
     s = s.replace("\xe2\x80\x99","'")
     return "".join([ c for c in s if c in printable ])
 
-roles = "Artillery Brute Controller Skirmisher Soldier".split()
+roles = "Artillery Brute Controller Lurker Skirmisher Soldier".split()
 groups = "Minion Standard Elite Solo".split()
 
 class Monster(object):
@@ -91,7 +91,9 @@ class Monster(object):
             os.system("open %s"%url)
         # else:
 
+thecolors = "bgrcmyk"
 # sorting keys
+level = lambda m: m.level
 HP = lambda m: m.HP
 AC = lambda m: m.AC
 fort = lambda m: m.fortitude
@@ -121,34 +123,70 @@ ac_bonus = lambda level:  2 + 4 + level/2 + (level+2)/5 + (level)/8 + (level+5)/
 
 tierHP = lambda level: 20+4.5*level*255/30
 
+def outliers(M, group, keys=None,gap=None):
+    liers = set()
+    if keys is None:
+        keys = [HP,AC,fort,ref,will]
+    else:
+        if not iterable(keys):
+            keys = [keys]
+    for lvl in set(map(level, group)):
+        subgroup = group.intersect(M.level(lvl))
+        for key in keys:
+            values = map(key, subgroup)
+            trim = max(len(values)/10,2)
+            # print trim
+            for i in range(trim):
+                values and values.remove(max(values))
+                values and values.remove(min(values))
+            if values:
+                vmax = max(values)
+                vmin = min(values)
+                for m in subgroup:
+                    v = key(m)
+                    if v > vmax+vmax/10:
+                        liers.add(m)
+                    if v < vmin-vmin/10:
+                        liers.add(m)
+                
+            else:
+                pass
+                # print "empty set for level %i with key %s"%(lvl,key)
+    return liers
+            
+
 def fetch_with_safari(url):
     """This is so we can use Safari's D&DI login cookies"""
     script = """
 	tell application "Safari"
-        -- activate
-        repeat with doc in (every document whose URL contains "compendium")
-            tell doc to close
-        end repeat
-		tell (make new document) to set URL to "%s"
-		set doc to 0
-		repeat while doc is 0
-			try
-				set doc to (last document whose URL contains "compendium")
-			on error
-				delay 0.1
-			end try
-		end repeat
-		set thetext to text of doc
-		if thetext contains "Subscribe Now" then
+    	-- activate
+    	repeat with doc in (every document whose URL contains "compendium")
+    		tell doc to close
+    	end repeat
+    	set doc to (make new document with properties {URL:"%s"})
+    	set doc to 0
+    	repeat while doc is 0
+    		try
+    			set doc to (last document whose URL contains "compendium")
+    		on error
+    			delay 0.1
+    		end try
+    	end repeat
+    	set thetext to text of doc
+    	repeat while thetext does not contain "Subscribe Now" and thetext does not contain "Published"
+    		delay 0.1
+    		set thetext to text of doc
+    	end repeat
+    	if thetext contains "Subscribe Now" then
     		tell application "Finder" -- this is so Safari won't block
-    		    activate
-    		    display dialog "Click Okay when you have logged in to D&DI"
+    			activate
+    			display dialog "Click Okay when you have logged in to D&DI"
     		end tell
     		set thetext to text of doc
-		end if
-		tell doc to close
-		return thetext
-	end tell
+    	end if
+    	tell doc to close
+    	return thetext
+    end tell
     """%url
     p = Popen(['osascript', '-e', script], stdout=PIPE)
     p.wait()
@@ -215,6 +253,7 @@ def monster_from_xml(element,session=None,update=False):
     
     s = get_monster(the_id)
     lines = s.split("\n")
+    # print lines
     roles = lines[4]
     thename = lines[1]
     # print map(ord, name),map(ord, newname)
@@ -235,8 +274,9 @@ def monster_from_xml(element,session=None,update=False):
     m.group = element.find("GroupRole").text.strip()
     
     role = element.find("CombatRole").text.split(',')
-    m.role - role[0].strip()
-    m.leader = len(g) > 1
+    print role, m.group
+    m.role = role[0].strip()
+    m.leader = len(m.group) > 1
     
     if (session):
         session.add(m)
@@ -367,6 +407,10 @@ class MonsterDB(object):
         return self.query.filter_by(role="Controller")
     
     @property
+    def lurkers(self):
+        return self.query.filter_by(role="Lurker")
+    
+    @property
     def leaders(self):
         return self.query.filter_by(leader=True)
     
@@ -376,7 +420,7 @@ class MonsterDB(object):
     
     @property
     def roles(self):
-        return [self.artillery, self.brutes, self.controllers, self.skirmishers, self.soldiers]
+        return [self.artillery, self.brutes, self.controllers, self.lurkers, self.skirmishers, self.soldiers]
     
     @property
     def random(self):
@@ -390,30 +434,38 @@ class MonsterDB(object):
     
     
     def level(self,levels):
-        """return all monsters in a set of levels"""
+        """return all monsters in a set of levels or single level. Takes an integer or container of integers"""
         if isinstance(levels, int):
             return self.query.filter_by(level=levels)
         return self.query.filter(Monster.level in levels)
     
-    def by_role(self,group):
+    def by_role(self,group=None):
         """Split a group into groups for each role. starting must still be in query form, not a list.
         Returns 5 groups, alphabetically: art,brut,con,skir,sol
         
         >>> M.by_role(M.solos)
         will return the solos in each of the roles.
+        
+        Defauts to starting from M.all, if group not specified
         """
+        if group is None:
+            group = self.all
         return [ group.intersect(g) for g in self.roles ]
     
-    def by_group(self,group):
+    def by_group(self,group=None):
         """Split a group into groups for each Group Role (Solo, Minion, etc.). starting must still be in query form, not a list.
         Returns 4 groups, by size: minion, standard, elite, solo
         
         >>> M.by_group(M.skirmishers)
         will return the skirmishers in each of the group roles.
+        
+        Defauts to starting from M.all, if group not specified
         """
+        if group is None:
+            group = self.all
         return [ group.intersect(g) for g in self.groups ]
     
-    def search(self, keywords,strict=False):
+    def search(self, keywords, strict=False):
         """
         If strict: do substring match on names
         else: do unordered keyword search
@@ -430,10 +482,8 @@ class MonsterDB(object):
     # def add
 
 def connectDB(fname='monsters.db'):
-    # f = resolve_file_path(fname)
-    do_init = not os.path.exists(fname)
+    # do_init = not os.path.exists(fname)
     engine = create_engine('sqlite:///%s'%fname)
-    # metadata.bind(engine)
     metadata.create_all(engine, checkfirst=True)
     return engine
 
@@ -455,8 +505,11 @@ def plot_groups(key, *groups):
     
     
     """
+    
     eps = .6/(len(groups))
     off=-.3+eps
+    if len(groups) == 1:
+        off=0
     figure()
     grid(True)
     pylab.xlabel("Level")
@@ -532,7 +585,7 @@ def plot_by_role(group,M):
     Must pass a MonsterDB object, so it can split the group into roles."""
     gps = M.by_role(group)
     figure()
-    bar(arange(len(gps)), [g.count() for g in gps])
+    bar(arange(len(gps)), [g.count() for g in gps],color=thecolors[:len(gps)])
     xticks(numpy.arange(len(gps))+.4, roles)
 
 def plot_by_group(group,M):
@@ -540,14 +593,14 @@ def plot_by_group(group,M):
     Must pass a MonsterDB object, so it can split the group into roles."""
     gps = M.by_group(group)
     figure()
-    bar(arange(len(gps)), [g.count() for g in gps])
+    bar(arange(len(gps)), [g.count() for g in gps],color='cbgr')
     xticks(numpy.arange(len(gps))+.4, groups)
 
 def plot_counts(M, groups, names=None):
     levels = range(1,31)
     figure()
     off=0
-    colors = "cbgrmyk"[:len(groups)]
+    colors = thecolors[:len(groups)]
     grid(True)
     gcf().set_figwidth(16)
     w = 1./(len(groups)+1)
