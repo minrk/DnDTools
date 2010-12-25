@@ -22,6 +22,7 @@ pjoin = os.path.join
 from subprocess import Popen, PIPE
 from string import printable
 from random import randint
+from getpass import getpass
 
 from xml.etree import ElementTree as etree
 from urllib import urlretrieve,urlencode
@@ -35,12 +36,19 @@ try:
 except ImportError:
     pass
 
+try:
+    import twill
+    from BeautifulSoup import BeautifulSoup
+except:
+    twill = None
+
 from sqlalchemy import *
 from sqlalchemy import orm
 
 metadata = MetaData()
 
 root_url = "http://www.wizards.com/dndinsider/compendium/compendiumSearch.asmx"
+_agent = None
 
 def unescape(s):
     s = s.replace("\xe2\x80\x99","'")
@@ -89,7 +97,8 @@ class Monster(object):
         print url
         if sys.platform == "darwin":
             os.system("open %s"%url)
-        # else:
+        else:
+            pass
 
 thecolors = "bgrcmyk"
 # sorting keys
@@ -192,9 +201,66 @@ def fetch_with_safari(url):
     p.wait()
     s = p.stdout.read()
     return s
+
+def fetch_with_twill(url):
+    global _agent
+    if _agent is None:
+        _agent = twill.get_browser()
+    a = _agent
+    a.go(url)
+    while a.get_url() != url:
+        f = a.get_form('form1')
+        f['email'] = raw_input("D&D Insider Email: ")
+        f['password'] = getpass("Password: ")
+        twill.commands.submit()
+        a.go(url)
+    
+    return a.get_html()
+        
     
 def get_monster(id):
-    return fetch_with_safari("http://www.wizards.com/dndinsider/compendium/monster.aspx?id=%i"%id)
+    url = "http://www.wizards.com/dndinsider/compendium/monster.aspx?id=%i"%id
+    if twill:
+        return monster_from_html(fetch_with_twill(url),id)
+    elif sys.platform == 'darwin':
+        return monster_from_string(fetch_with_safari(url),id)
+    else:
+        raise "I can't fetch the url, please install twill and BeautifulSoup"
+
+def _extract_value(parent,name):
+    e = parent.find('b',text=name)
+    return int(re.findall('[0-9]+',e.next)[0])
+
+def monster_from_html(s,id):
+    soup = BeautifulSoup(s)
+    soup = soup.find('div', id='detail')
+    h1 = soup.find('h1',{'class':'monster'})
+    header = list(h1.childGenerator())
+    name = header[0].encode('utf8')
+    span = h1.find('span', {'class':'level'})
+    roles = list(span.childGenerator())[0]
+    body = soup.find('table',{'class':'bodytable'})
+    if body is None:
+        body = soup.find('p',{'class':'flavor'})
+    m = Monster(name, id)
+    
+    m.HP = _extract_value(body,'HP')
+    m.defenses = [_extract_value(body,d) for d in 'AC Fortitude Reflex Will'.split()]
+    
+    try:
+        _,lvls,rest = roles.split(" ",2)
+        m.level = int(lvls)
+        m.leader = False
+        # m.group=""
+        if rest.startswith("Solo") or rest.startswith("Elite"):
+            m.group,rest = rest.split(" ",1)
+        if "Leader" in rest:
+            m.leader = True
+            rest = rest.split()[0]
+        m.role = rest
+    except Exception, e:
+        raise e
+    return m
 
 def monster_from_string(s,id):
     # s = get_monster(id)
@@ -222,10 +288,6 @@ def monster_from_string(s,id):
         raise e
     return m
 
-def build_monster(id):
-    return monster_from_string(get_monster(id),id)
-    
-
 def query_monsters(keywords="", max_level=99,min_level=0, role="null", group="null",nameonly=False):
     """Make an XML Query to D&DI's SOAP API"""
     url = root_url + "/KeywordSearchWithFilters?"""
@@ -251,25 +313,12 @@ def monster_from_xml(element,session=None,update=False):
                 print "already",repr(m)
                 return m
     
-    s = get_monster(the_id)
-    lines = s.split("\n")
-    # print lines
-    roles = lines[4]
-    thename = lines[1]
-    # print map(ord, name),map(ord, newname)
-    # assert name == newname, "We must have multiple Safari windows active"
-    
-    hps = re.findall("HP\W*[0-9]+",s)[0]
-    s = s[s.find(hps)+len(hps):]
-    defs = re.findall("AC.*Will\W*[0-9]+", s)[0].replace(';',',')
-    # defs = re.findall("AC[\W0-9; ]*Fort\w*[\W0-9; ]*Ref\w*[\W0-9; ]*Will\W*[0-9]+", s)[0].replace(';',',')
-    # print defs
-    
-    m = m or Monster(thename, the_id)
+    new_m = get_monster(the_id)
+    m = m or new_m
     m.level = int(element.find("Level").text)
     
-    m.HP = int(hps.split()[1])
-    m.defenses = [int(s.split()[1]) for s in defs.split(', ')]
+    m.HP = new_m.HP
+    m.defenses = new_m.defenses
     
     m.group = element.find("GroupRole").text.strip()
     
@@ -329,6 +378,8 @@ class MonsterDB(object):
     def __init__(self, engine=None,session=None):
         if engine is None:
             engine = create_engine('sqlite:///:memory:')
+        elif isinstance(engine, basestring):
+            engine = connectDB(engine)
         if session is None:
             session = orm.create_session(engine)
         self.session = session
